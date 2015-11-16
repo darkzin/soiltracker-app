@@ -74,4 +74,37 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     app.$.headerPanelMain.scrollToTop(true);
   };
 
+  app.students = [
+    { 
+      portrait: "test/images/student1.png",
+      name: "김창환",
+      school: "구리고등학교",
+      grade: "1학년",
+    },
+    { 
+      portrait: "test/images/student2.png",
+      name: "김창환",
+      school: "구리고등학교",
+      grade: "1학년",
+    },
+    { 
+      portrait: "test/images/student3.png",
+      name: "김창환",
+      school: "구리고등학교",
+      grade: "1학년",
+    },
+    { 
+      portrait: "test/images/student4.png",
+      name: "김창환",
+      school: "구리고등학교",
+      grade: "1학년",
+    },
+    { 
+      portrait: "test/images/student5.png",
+      name: "김창환",
+      school: "구리고등학교",
+      grade: "1학년",
+    },
+  ]
+
 })(document);

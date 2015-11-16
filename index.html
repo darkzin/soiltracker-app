@@ -15,7 +15,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <meta charset="utf-8">
   <meta name="description" content="">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Polymer Starter Kit" />
+  <meta name="generator" content="Project Stark" />
   <title>공부하는 학원, 스터디브로</title>
   <!-- Place favicon.ico in the `app/` directory -->
 
@@ -30,7 +30,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   <!-- Add to homescreen for Chrome on Android -->
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="application-name" content="PSK">
+  <meta name="application-name" content="StudyBro">
   <link rel="icon" sizes="192x192" href="images/touch/chrome-touch-icon-192x192.png">
 
   <!-- Add to homescreen for Safari on iOS -->
@@ -55,14 +55,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <!-- endreplace-->
 
   <!-- For shared styles, shared-styles.html import in elements.html -->
-  <style is="custom-style" include="shared-styles"></style>
+  <style is="custom-style" include="shared-styles">
+  </style>
 
 </head>
 
 <body unresolved class="fullbleed layout vertical">
   <span id="browser-sync-binding"></span>
   <template is="dom-bind" id="app">
-
     <paper-drawer-panel id="paperDrawerPanel">
       <!-- Drawer Scroll Header Panel -->
       <paper-scroll-header-panel drawer fixed>
@@ -92,56 +92,80 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       </paper-scroll-header-panel>
 
       <!-- Main Area -->
-      <paper-scroll-header-panel main id="headerPanelMain" condenses keep-condensed-header>
 
-        <!-- Main Toolbar -->
-        <paper-toolbar id="mainToolbar" class="tall">
-          <paper-icon-button id="paperToggle" icon="menu" paper-drawer-toggle></paper-icon-button>
-          <span class="flex"></span>
+      <!-- Main Content -->
+      <div main>
+        <iron-pages attr-for-selected="data-route" selected="{{route}}">
 
-          <!-- Toolbar icons -->
-          <paper-icon-button icon="refresh"></paper-icon-button>
-          <paper-icon-button icon="search"></paper-icon-button>
+          <section data-route="home">
+            <paper-scroll-header-panel id="headerPanelMain" condenses keep-condensed-header>
 
-          <!-- Application name -->
-          <div class="middle middle-container center horizontal layout">
-            <div class="app-name">11월 20일 고2 문과 수업</div>
-          </div>
+              <!-- Main Toolbar -->
+              <paper-toolbar id="mainToolbar" class="tall">
+                <paper-icon-button id="paperToggle" icon="menu" paper-drawer-toggle></paper-icon-button>
+                <span class="flex"></span>
 
-          <!-- Application sub title -->
-          <div class="bottom bottom-container center horizontal layout">
-            <div class="bottom-title paper-font-subhead">정원: 10명, 출석: 4명, 결석: 6명</div>
-          </div>
+                <!-- Toolbar icons -->
+                <paper-icon-button icon="refresh"></paper-icon-button>
+                <paper-icon-button icon="search"></paper-icon-button>
 
-        </paper-toolbar>
+                <!-- Application name -->
+                <div class="middle middle-container center horizontal layout">
+                  <div class="app-name">11월 20일 고2 문과 수업</div>
+                </div>
 
-        <!-- Main Content -->
-        <div class="content">
-          <iron-pages attr-for-selected="data-route" selected="{{route}}">
+                <!-- Application sub title -->
+                <div class="bottom bottom-container center horizontal layout">
+                  <div class="bottom-title paper-font-subhead">정원: 10명, 출석: 4명, 결석: 6명</div>
+                </div>
 
-            <section data-route="home">
-              <paper-material elevation="1">
-              </paper-material>
-            </section>
+              </paper-toolbar>
+              <div class="content">
+                <!--<iron-ajax url="test/data/students.json" last-response="{{students}}"></iron-ajax>-->
+                <iron-list items="{{students}}" as="student">
+                  <template>
+                    <paper-material>
+                      <iron-image style="width: 80px; height: 80px;" sizing="contain" src="[[student.portrait]]"></iron-image>
+                      <span>[[student.name]]</span>
+                      <span>[[student.school]]</span>
+                      <span>[[student.grade]]</span>
+                      <paper-button>
+                        <iron-icon icon="check"></iron-icon>
+                          출석
+                        </paper-button>
+                    </paper-material>
+                  </template>
+                </iron-list>
+              </div>
+            </paper-scroll-header-panel>
+          </section>
 
-            <section data-route="users">
-              <paper-material elevation="1">
-              </paper-material>
-            </section>
+          <section data-route="users" class="vertical layout">
+            
+            <!-- tabs for selecting course. -->
+            <paper-tabs selected="0">
+              <paper-tab>고1 - 수학 </paper-tab>
+              <paper-tab>고2 문과 - 수학</paper-tab>
+              <paper-tab>고2 문과 - 언어</paper-tab>
+            </paper-tabs>
 
-            <section data-route="user-info">
-              <paper-material elevation="1">
-              </paper-material>
-            </section>
+            <!-- course title. -->
+            <h1> 11월 21일, 고1 - 수학 수업 </h1>
+            <dialpad-list class="flex"></dialpad-list>
+          </section>
 
-            <section data-route="contact">
-              <paper-material elevation="1">
-              </paper-material>
-            </section>
+          <section data-route="user-info">
+            <paper-material elevation="1">
+            </paper-material>
+          </section>
 
-          </iron-pages>
-        </div>
-      </paper-scroll-header-panel>
+          <section data-route="contact">
+            <paper-material elevation="1">
+            </paper-material>
+          </section>
+
+        </iron-pages>
+      </div>
     </paper-drawer-panel>
 
     <paper-toast id="toast">

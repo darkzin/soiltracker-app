@@ -12,3 +12,11 @@ body {
   font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   color: #333;
 }
+
+iron-pages, section[data-route] {
+  box-sizing: border-box;
+  height: 100%;
+}
+
+section[data-route] {
+}
