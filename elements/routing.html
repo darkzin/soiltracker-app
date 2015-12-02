@@ -24,15 +24,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     // Routes
     page('/', scrollToTop, function() {
-      app.route = 'sensor';
+      app.route = 'device';
     });
 
-    page('/graph', scrollToTop, function () {
-      app.route = 'graph';
+    page('/chart', scrollToTop, function () {
+      app.route = 'chart';
     });
 
-    page('/monitoring', scrollToTop, function (data) {
-      app.route = 'monitoring';
+    page('/conditions', scrollToTop, function (data) {
+      app.route = 'conditions';
       app.params = data.params;
     });
 
@@ -50,6 +50,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     page({
       hashbang: true
     });
+
+    app.route = 'set-condition';
 
   });
 

@@ -1,0 +1,51 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<dom-module id="ajax-page">
+  <template>
+    <iron-ajax id="ajax"
+               url="[[ajaxUrl]]"
+               body="[[ajaxParams]]"
+               method="POST"
+               handle-as="json"
+               last-response="{{ajaxResponse}}"
+               on-response="handleResponse">
+    </iron-ajax>
+    <content></content>
+  </template>
+  <script>
+    AjaxPage = Polymer({
+      is: 'ajax-page',
+      properties: {
+        ajaxUrl: String,
+        ajaxParams: String,
+        backTo: String,
+        moveTo: String,
+        afterSave: String,
+        ajaxResponse: {
+          type: Object,
+          observer: "_ajaxResponseChanged",
+        },
+        data: {
+          type: Object,
+          value: function(){ return {}; },
+          notify: true,
+        },
+      },
+      attached: function(){
+//        this.$.ajax.generateRequest();
+      },
+      save: function(){
+      },
+      handleResponse: function(res){
+        this.data = this.ajaxResponse.Item;
+      },
+      _ajaxResponseChanged: function(newValue, oldValue) {
+        var templateId = this.id + "Page";
+        var pageTemplate = this.querySelector("template#" + templateId);
+        if( !!pageTemplate ) {
+          pageTemplate.set("Item", newValue.Item);
+        };
+      }
+    })
+  </script>
+</dom-module>

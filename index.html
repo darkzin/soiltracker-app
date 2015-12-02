@@ -5,8 +5,8 @@
   <meta charset="utf-8">
   <meta name="description" content="">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Project Stark" />
-  <title>Soil Tracker</title>
+  <meta name="generator" content="Project Stark"/>
+  <title>Soil Tracker!</title>
   <!-- Place favicon.ico in the `app/` directory -->
 
   <!-- Chrome for Android theme color -->
@@ -46,160 +46,441 @@
 
   <!-- For shared styles, shared-styles.html import in elements.html -->
   <style is="custom-style" include="shared-styles">
+    paper-material {
+      height: initial;
+    }
+
+    paper-header-panel {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    paper-listbox {
+      overflow-y: scroll;
+    }
+
+    .sensor-table {
+      width: 100%;
+      text-align: center;
+      border-collapse: collapse;
+    }
+
+    .sensor-table thead tr th {
+      border-top: 1px solid #eee;
+      border-bottom: 1px solid #eee;
+      padding-top: 0.5rem;
+      padding-bottom: 2rem;
+    }
+
+    .sensor-table tbody tr td {
+      padding: 1rem 0;
+    }
+
+    .sensor-table thead th:first-child, .sensor-table tbody td:first-child {
+      text-align: left;
+    }
+
+    .sensor-table tbody td:first-child {
+      word-spacing: 0.5rem;
+    }
+
+    .sensor-table th.name {
+      width: 50%;
+    }
+
+    .sensor-table th.cur {
+      width: 15%;
+    }
+
+    .sensor-table th.min {
+      width: 15%;
+    }
+
+    .sensor-table th.max {
+      width: 15%;
+    }
+
+    .sensor-table tbody tr td.name span.sensor-name {
+      display: inline-block;
+      padding-top: 0.5rem;
+    }
+
+    section[data-route='set-condition'] .sensor-table {
+      margin: 2rem 0;
+    }
+
+    section[data-route='set-condition'] .sensor-table th.name {
+      width: 50%;
+    }
+
+    section[data-route='set-condition'] .sensor-table th.min {
+      width: 25%;
+    }
+
+    section[data-route='set-condition'] .sensor-table th.max {
+      width: 25%;
+    }
+
+    section[data-route='set-condition'] .sensor-table td.min,
+    section[data-route='set-condition'] .sensor-table td.max {
+      padding: 1rem;
+    }
+
+    .list {
+      padding-top: 12px;
+      background-color: white;
+      display: inline-block;
+      width: 240px;
+      height: 228px;
+      margin: 12px;
+      @apply(--shadow-elevation-2dp);
+    }
+
+    paper-listbox {
+      margin: 1rem 0;
+      background-color: white;
+      width: 100%;
+    }
+
+    paper-listbox paper-item {
+      border-bottom: 1px solid #eee;
+    }
+
+    paper-fab {
+      position: absolute;
+      bottom: 1rem;
+      right: 1rem;
+    }
+
+    .avatar {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      overflow: hidden;
+      background: #ccc;
+    }
+
+    .blue {
+      background-color: var(--paper-light-blue-300);
+    }
+
+    .red {
+      background-color: var(--paper-red-300);
+    }
+
+    .orange {
+      background-color: var(--paper-amber-300);
+    }
+
+    .green {
+      background-color: var(--paper-green-300);
+    }
+
+    paper-listbox {
+      margin: 0;
+    }
+
+    paper-listbox paper-item {
+      padding: 0.5rem;
+      border-bottom: 1px solid #eee;
+    }
   </style>
 
 </head>
 
 <body unresolved class="fullbleed layout vertical">
-  <span id="browser-sync-binding"></span>
-  <template is="dom-bind" id="app">
-    <paper-drawer-panel id="paperDrawerPanel">
-      <!-- Drawer Scroll Header Panel -->
-      <paper-scroll-header-panel drawer fixed>
+<span id="browser-sync-binding"></span>
+<template is="dom-bind" id="app">
+  <paper-drawer-panel id="paperDrawerPanel">
 
-        <!-- Drawer Toolbar -->
-        <paper-toolbar id="drawerToolbar">
-          <span class="paper-font-title">Menu</span>
-        </paper-toolbar>
+    <!-- Drawer Scroll Header Panel -->
+    <paper-scroll-header-panel drawer fixed>
 
-        <!-- Drawer Content -->
-        <paper-menu class="list" attr-for-selected="data-route" selected="[[route]]">
-          <a data-route="sensor" href="/" on-tap="onDataRouteClick">
-            <iron-icon icon="settings-remote"></iron-icon>
-            <span>센서 정보</span>
-          </a>
+      <!-- Drawer Toolbar -->
+      <paper-toolbar id="drawerToolbar">
+        <span class="paper-font-title">Menu</span>
+      </paper-toolbar>
 
-          <a data-route="graph" href="/graph" on-tap="onDataRouteClick">
-            <iron-icon icon="assessment"></iron-icon>
-            <span>센서 그래프</span>
-          </a>
+      <!-- Drawer Content -->
+      <paper-menu attr-for-selected="data-route" selected="[[route]]">
+        <a data-route="devices" href="/" on-tap="onDataRouteClick">
+          <iron-icon icon="settings-remote"></iron-icon>
+          <span>센서 정보</span>
+        </a>
 
-          <a data-route="monitoring" href="/monitoring" on-tap="onDataRouteClick">
-            <iron-icon icon="device:dvr"></iron-icon>
-            <span>모니터링 관리</span>
-          </a>
+        <a data-route="conditions" href="/conditions" on-tap="onDataRouteClick">
+          <iron-icon icon="device:dvr"></iron-icon>
+          <span>모니터링 관리</span>
+        </a>
 
-          <a data-route="options" href="/options" on-tap="onDataRouteClick">
-            <iron-icon icon="apps"></iron-icon>
-            <span>옵션 설정</span>
-          </a>
-        </paper-menu>
-      </paper-scroll-header-panel>
+        <a data-route="options" href="/options" on-tap="onDataRouteClick">
+          <iron-icon icon="apps"></iron-icon>
+          <span>옵션 설정</span>
+        </a>
+      </paper-menu>
+    </paper-scroll-header-panel>
 
-      <!-- Main Area -->
+    <!-- Main Area -->
 
-      <!-- Main Content -->
-      <div main>
-        <iron-pages attr-for-selected="data-route" selected="{{route}}">
+    <!-- Main Content -->
+    <div main>
+      <iron-pages attr-for-selected="data-route" selected="[[route]]">
 
-          <section data-route="sensor">
-            <paper-header-panel>
-              <paper-toolbar>
-                <paper-icon-button id="paperToggle" icon="menu" paper-drawer-toggle></paper-icon-button>
-                <div class="title">디바이스 정보</div>
-              </paper-toolbar>
-              <div class="content">
-                <paper-dropdown-menu>
-                  <paper-menu class="dropdown-content" selected="0">
-                    <paper-item>Lorem ipsum dolor sit amet.</paper-item>
-                    <paper-item>Animi ducimus fugit id minima.</paper-item>
-                    <paper-item>Dolore ducimus porro quia rem.</paper-item>
-                    <paper-item>Amet error labore quidem quo.</paper-item>
-                    <paper-item>Consectetur cupiditate incidunt itaque laudantium?</paper-item>
-                  </paper-menu>
-                </paper-dropdown-menu>
-                <table>
+        <!-- device section -->
+        <section id="devicePage" data-route="device">
+          <iron-ajax auto
+                     url$="[[config.invokeUrl]]/snucse-iot-soiltracker-get-user-device"
+                     method="POST"
+                     body='{"user_name": "amoretspero"}'
+                     content-type="application/json"
+                     handle-as="json"
+                     last-response="{{devices}}">
+          </iron-ajax>
+          <iron-ajax auto
+                     url$="[[config.invokeUrl]]/snucse-iot-soiltracker-get-device-condition"
+                     method="POST"
+                     body='{"user_name": "amoretspero", "device_id": "snucse2015-iot"}'
+                     content-type="application/json"
+                     handle-as="json"
+                     last-response="{{condition}}">
+          </iron-ajax>
+          <iron-ajax auto
+                     url$="[[config.invokeUrl]]/snucse-iot-soiltracker-fetch-latest-data"
+                     method="POST"
+                     body='{"device_id": "snucse2015-iot"}'
+                     content-type="application/json"
+                     handle-as="json"
+                     last-response="{{latestData}}">
+          </iron-ajax>
+          <paper-header-panel>
+
+            <!-- toolbar -->
+            <paper-toolbar>
+              <paper-icon-button id="paperToggle" icon="menu" paper-drawer-toggle></paper-icon-button>
+              <div class="title">Device Information</div>
+            </paper-toolbar>
+
+            <!-- content -->
+            <div class="content">
+              <paper-material>
+                <h1>snucse-iot</h1>
+                <table class="sensor-table">
                   <thead>
                   <tr>
-                    <td>센서명</td>
-                    <td>Current</td>
-                    <td>Min</td>
-                    <td>Max</td>
-                    <td>그래프</td>
+                    <th class="name">Sensor Name</th>
+                    <th class="cur">Cur.</th>
+                    <th class="min">Min.</th>
+                    <th class="max">Max.</th>
                   </tr>
                   </thead>
                   <tbody>
                   <tr>
-                    <td>습도</td>
-                    <td>30</td>
-                    <td>20</td>
-                    <td>50</td>
                     <td>
-                      <paper-icon-button icon="assessment"></paper-icon-button>
+                      <iron-icon class="avatar orange" src="images/temperature.svg"></iron-icon>
+                      <span class="sensor-name">Temperature</span>
                     </td>
+                    <td class="cur">[[latestData.temperature]]</td>
+                    <td class="min">[[condition.temperature_min]]</td>
+                    <td class="max">[[condition.temperature_max]]</td>
                   </tr>
                   <tr>
-                    <td>습도</td>
-                    <td>30</td>
-                    <td>20</td>
-                    <td>50</td>
                     <td>
-                      <paper-icon-button icon="assessment"></paper-icon-button>
+                      <iron-icon class="avatar blue" src="images/moisture.svg"></iron-icon>
+                      <span class="sensor-name">Moisture</span>
                     </td>
+                    <td class="cur">[[latestData.moisture]]</td>
+                    <td class="min">[[condition.moisture_min]]</td>
+                    <td class="max">[[condition.moisture_max]]</td>
                   </tr>
                   <tr>
-                    <td>습도</td>
-                    <td>30</td>
-                    <td>20</td>
-                    <td>50</td>
                     <td>
-                      <paper-icon-button icon="assessment"></paper-icon-button>
+                      <iron-icon class="avatar red" src="images/uv.svg"></iron-icon>
+                      <span class="sensor-name">UV</span>
                     </td>
+                    <td class="cur">[[latestData.uv]]</td>
+                    <td class="min">[[condition.uv_min]]</td>
+                    <td class="max">[[condition.uv_max]]</td>
                   </tr>
                   <tr>
-                    <td>습도</td>
-                    <td>30</td>
-                    <td>20</td>
-                    <td>50</td>
                     <td>
-                      <paper-icon-button icon="assessment"></paper-icon-button>
+                      <iron-icon class="avatar green" src="images/light.svg"></iron-icon>
+                      <span class="sensor-name">Light</span>
                     </td>
+                    <td class="cur">[[latestData.light]]</td>
+                    <td class="min">[[condition.light_min]]</td>
+                    <td class="max">[[condition.light_max]]</td>
                   </tr>
                   </tbody>
                 </table>
+              </paper-material>
+            </div>
+          </paper-header-panel>
+        </section>
+
+        <!-- chart section -->
+        <section id="chartPage" data-route="chart">
+          <iron-ajax auto
+                     url$="[[config.invokeUrl]]/snucse-iot-soiltracker-fetch-data"
+                     body='{ "device_id": "snucse2015-iot", "time_start": 20151116000000, "time_end": 20151117000000, "interval": "1d" }'
+                     method="POST"
+                     content-type="application/json"
+                     handle-as="json"
+                     last-response="{{fetchData}}">
+          </iron-ajax>
+          <google-chart
+                  type="line"
+                  options=""
+                  cols='[{ "label": "dateTime", "type": "string" }, { "label": "value", "type": "number" }]'
+                  rows="{{fetchData.light}}">
+          </google-chart>
+        </section>
+
+        <!-- conditions section -->
+        <section id="conditionsPage" data-route="conditions">
+          <iron-ajax auto
+                     url$="[[config.invokeUrl]]/snucse-iot-soiltracker-get-user-condition"
+                     body='{ "user_name": "amoretspero" }'
+                     method="POST"
+                     content-type="application/json"
+                     handle-as="json"
+                     last-response="{{conditions}}">
+          </iron-ajax>
+          <paper-header-panel mode="standard">
+            <paper-toolbar>
+              <paper-icon-button icon="menu"></paper-icon-button>
+              <div class="title">Condition list</div>
+            </paper-toolbar>
+            <paper-listbox class="flex" on-iron-select="selectCondition">
+              <template is="dom-repeat" items="[[conditionNames]]">
+                <paper-item>[[item]]</paper-item>
+              </template>
+            </paper-listbox>
+            <paper-fab icon="add"></paper-fab>
+          </paper-header-panel>
+        </section>
+
+        <!-- condition setting section -->
+        <section id="setConditionPage" data-route="set-condition">
+          <paper-header-panel>
+            <paper-toolbar>
+              <paper-icon-button icon="arrow-back" href="/conditions"></paper-icon-button>
+              <div class="title flex">Set Condition</div>
+              <paper-icon-button icon="check" on-click="saveCondition"></paper-icon-button>
+            </paper-toolbar>
+            <template is="dom-bind" id="selectedCondition">
+              <div class="content-fit">
+                <paper-material>
+                  <paper-input label="Condition Name" value="{{data.condition_name}}"></paper-input>
+                  <table class="sensor-table">
+                    <thead>
+                    <tr>
+                      <th class="name">Sensor Name</th>
+                      <th class="min">Min.</th>
+                      <th class="max">Max.</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                      <td class="name">
+                        <iron-icon class="avatar orange" src="images/temperature.svg"></iron-icon>
+                        <span class="sensor-name">Temperature</span>
+                      </td>
+                      <td class="min">
+                        <paper-input value="{{data.temperature_min}}"></paper-input>
+                      </td>
+                      <td class="max">
+                        <paper-input value="{{data.temperature_max}}"></paper-input>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="name">
+                        <iron-icon class="avatar blue" src="images/moisture.svg"></iron-icon>
+                        <span class="sensor-name">Moisture</span>
+                      </td>
+                      <td class="min">
+                        <paper-input value="{{data.moisture_min}}"></paper-input>
+                      </td>
+                      <td class="max">
+                        <paper-input value="{{data.moisture_max}}"></paper-input>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="name">
+                        <iron-icon class="avatar red" src="images/uv.svg"></iron-icon>
+                        <span class="sensor-name">UV</span>
+                      </td>
+                      <td class="min">
+                        <paper-input value="{{data.uv_min}}"></paper-input>
+                      </td>
+                      <td class="max">
+                        <paper-input value="{{data.uv_max}}"></paper-input>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="name">
+                        <iron-icon class="avatar green" src="images/light.svg"></iron-icon>
+                        <span class="sensor-name">Light</span>
+                      </td>
+                      <td class="min">
+                        <paper-input value="{{data.light_min}}"></paper-input>
+                      </td>
+                      <td class="max">
+                        <paper-input value="{{data.light_max}}"></paper-input>
+                      </td>
+                    </tr>
+                    </tbody>
+                  </table>
+                </paper-material>
               </div>
-            </paper-header-panel>
-          </section>
+          </paper-header-panel>
+</template>
+<iron-ajax id="saveCondition"
+           url$="[[config.invokeUrl]]/snucse-iot-soiltracker-set-monitoring-condition"
+           method="POST"
+           content-type="application/json"
+           handle-as="json"
+           handle-response="handleAjaxResponse">
+</iron-ajax>
+</section>
 
-          <section data-route="graph">
-          </section>
+<!-- option setting section -->
+<section id="options" data-route="options">
+</section>
 
-          <section data-route="monitoring">
-          </section>
+</iron-pages>
+</div>
+</paper-drawer-panel>
 
-          <section data-route="options">
-          </section>
+<paper-toast id="toast">
+  <span class="toast-hide-button" role="button" tabindex="0" onclick="app.$.toast.hide()">Ok</span>
+</paper-toast>
 
-        </iron-pages>
-      </div>
-    </paper-drawer-panel>
+<iron-ajax id="devices-ajax" auto handle-as="json" on-response="handleDevices"></iron-ajax>
 
-    <paper-toast id="toast">
-      <span class="toast-hide-button" role="button" tabindex="0" onclick="app.$.toast.hide()">Ok</span>
-    </paper-toast>
+<!-- Uncomment next block to enable Service Worker support (1/2) -->
+<!--
+<paper-toast id="caching-complete"
+             duration="6000"
+             text="Caching complete! This app will work offline.">
+</paper-toast>
 
-    <!-- Uncomment next block to enable Service Worker support (1/2) -->
-    <!--
-    <paper-toast id="caching-complete"
-                 duration="6000"
-                 text="Caching complete! This app will work offline.">
-    </paper-toast>
+<platinum-sw-register auto-register
+                      clients-claim
+                      skip-waiting
+                      on-service-worker-installed="displayInstalledToast">
+  <platinum-sw-cache default-cache-strategy="fastest"
+                     cache-config-file="cache-config.json">
+  </platinum-sw-cache>
+</platinum-sw-register>
+-->
 
-    <platinum-sw-register auto-register
-                          clients-claim
-                          skip-waiting
-                          on-service-worker-installed="displayInstalledToast">
-      <platinum-sw-cache default-cache-strategy="fastest"
-                         cache-config-file="cache-config.json">
-      </platinum-sw-cache>
-    </platinum-sw-register>
-    -->
+</template>
 
-  </template>
-
-  <!-- build:js scripts/app.js -->
-  <script src="scripts/app.js"></script>
-  <!-- endbuild-->
+<!-- build:js scripts/app.js -->
+<script src="scripts/app.js"></script>
+<!-- endbuild-->
 </body>
 
 </html>
