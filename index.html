@@ -90,7 +90,7 @@
     }
 
     .sensor-table th.cur {
-      width: 15%;
+      width: 10%;
     }
 
     .sensor-table th.min {
@@ -99,6 +99,10 @@
 
     .sensor-table th.max {
       width: 15%;
+    }
+
+    .sensor-table th.chartButton {
+      width: 10%;
     }
 
     .sensor-table tbody tr td.name span.sensor-name {
@@ -229,30 +233,20 @@
       <iron-pages attr-for-selected="data-route" selected="[[route]]">
 
         <!-- device section -->
-        <section id="devicePage" data-route="device">
-          <iron-ajax auto
-                     url$="[[config.invokeUrl]]/snucse-iot-soiltracker-get-user-device"
-                     method="POST"
-                     body='{"user_name": "amoretspero"}'
-                     content-type="application/json"
-                     handle-as="json"
-                     last-response="{{devices}}">
-          </iron-ajax>
-          <iron-ajax auto
-                     url$="[[config.invokeUrl]]/snucse-iot-soiltracker-get-device-condition"
+        <section id="device" class="page" data-route="device">
+          <iron-ajax url$="[[config.invokeUrl]]/snucse-iot-soiltracker-get-device-condition"
                      method="POST"
                      body='{"user_name": "amoretspero", "device_id": "snucse2015-iot"}'
                      content-type="application/json"
                      handle-as="json"
                      last-response="{{condition}}">
           </iron-ajax>
-          <iron-ajax auto
-                     url$="[[config.invokeUrl]]/snucse-iot-soiltracker-fetch-latest-data"
+          <iron-ajax url$="[[config.invokeUrl]]/snucse-iot-soiltracker-fetch-latest-data"
                      method="POST"
                      body='{"device_id": "snucse2015-iot"}'
                      content-type="application/json"
                      handle-as="json"
-                     last-response="{{latestData}}">
+                     last-response="{{device}}">
           </iron-ajax>
           <paper-header-panel>
 
@@ -265,7 +259,7 @@
             <!-- content -->
             <div class="content">
               <paper-material>
-                <h1>snucse-iot</h1>
+                <h1>snucse2015-iot</h1>
                 <table class="sensor-table">
                   <thead>
                   <tr>
@@ -273,6 +267,7 @@
                     <th class="cur">Cur.</th>
                     <th class="min">Min.</th>
                     <th class="max">Max.</th>
+                    <th class="chartButton">Chart</th>
                   </tr>
                   </thead>
                   <tbody>
@@ -281,36 +276,52 @@
                       <iron-icon class="avatar orange" src="images/temperature.svg"></iron-icon>
                       <span class="sensor-name">Temperature</span>
                     </td>
-                    <td class="cur">[[latestData.temperature]]</td>
+                    <td class="cur">[[toInteger(device.temperature)]]</td>
                     <td class="min">[[condition.temperature_min]]</td>
                     <td class="max">[[condition.temperature_max]]</td>
+                    <td class="chart">
+                      <paper-icon-button icon="assessment" data-sensor="temperature"
+                                         on-click="sensorChartSelected"></paper-icon-button>
+                    </td>
                   </tr>
                   <tr>
                     <td>
                       <iron-icon class="avatar blue" src="images/moisture.svg"></iron-icon>
-                      <span class="sensor-name">Moisture</span>
+                      <span class="device-name">Moisture</span>
                     </td>
-                    <td class="cur">[[latestData.moisture]]</td>
+                    <td class="cur">[[toInteger(device.moisture)]]</td>
                     <td class="min">[[condition.moisture_min]]</td>
                     <td class="max">[[condition.moisture_max]]</td>
+                    <td class="chart">
+                      <paper-icon-button icon="assessment" data-sensor="moisture"
+                                         on-click="sensorChartSelected"></paper-icon-button>
+                    </td>
                   </tr>
                   <tr>
                     <td>
                       <iron-icon class="avatar red" src="images/uv.svg"></iron-icon>
-                      <span class="sensor-name">UV</span>
+                      <span class="device-name">UV</span>
                     </td>
-                    <td class="cur">[[latestData.uv]]</td>
+                    <td class="cur">1.2</td>
                     <td class="min">[[condition.uv_min]]</td>
                     <td class="max">[[condition.uv_max]]</td>
+                    <td class="chart">
+                      <paper-icon-button icon="assessment" data-sensor="uv"
+                                         on-click="sensorChartSelected"></paper-icon-button>
+                    </td>
                   </tr>
                   <tr>
                     <td>
                       <iron-icon class="avatar green" src="images/light.svg"></iron-icon>
-                      <span class="sensor-name">Light</span>
+                      <span class="device-name">Light</span>
                     </td>
-                    <td class="cur">[[latestData.light]]</td>
+                    <td class="cur">[[toInteger(device.light)]]</td>
                     <td class="min">[[condition.light_min]]</td>
                     <td class="max">[[condition.light_max]]</td>
+                    <td class="chart">
+                      <paper-icon-button icon="assessment" data-sensor="light"
+                                         on-tap="sensorChartSelected"></paper-icon-button>
+                    </td>
                   </tr>
                   </tbody>
                 </table>
@@ -320,27 +331,50 @@
         </section>
 
         <!-- chart section -->
-        <section id="chartPage" data-route="chart">
-          <iron-ajax auto
-                     url$="[[config.invokeUrl]]/snucse-iot-soiltracker-fetch-data"
-                     body='{ "device_id": "snucse2015-iot", "time_start": 20151116000000, "time_end": 20151117000000, "interval": "1d" }'
+        <section id="chart" class="page" data-route="chart">
+          <iron-ajax id="chartAjax"
+                     url$="[[config.invokeUrl]]snucse-iot-soiltracker-fetch-data"
+                     body$='{ "device_id": "snucse2015-iot", "time_start": [[stringifyTime(chartPeriod)]], "time_end": [[timeNow]], "interval": "[[chartPeriod]]" }'
                      method="POST"
                      content-type="application/json"
                      handle-as="json"
-                     last-response="{{fetchData}}">
+                     last-response="{{chartData}}">
           </iron-ajax>
-          <google-chart
-                  type="line"
-                  options=""
-                  cols='[{ "label": "dateTime", "type": "string" }, { "label": "value", "type": "number" }]'
-                  rows="{{fetchData.light}}">
-          </google-chart>
+          <paper-header-panel>
+            <paper-toolbar>
+              <paper-icon-button icon="arrow-back" href="/device"></paper-icon-button>
+              <div class="title">Chart Of Sensor</div>
+            </paper-toolbar>
+            <paper-material>
+              <h3> Select period of time</h3>
+              <paper-dropdown-menu>
+                <paper-menu class="dropdown-content" on-iron-select="chartPeriodChanged" selected="3">
+                  <paper-item>3h</paper-item>
+                  <paper-item>6h</paper-item>
+                  <paper-item>12h</paper-item>
+                  <paper-item>1d</paper-item>
+                  <paper-item>3d</paper-item>
+                  <paper-item>7d</paper-item>
+                  <paper-item>1m</paper-item>
+                  <paper-item>3m</paper-item>
+                  <paper-item>6m</paper-item>
+                </paper-menu>
+              </paper-dropdown-menu>
+            </paper-material>
+            <!--<template is="dom-bind" id="sensorData">-->
+            <google-chart
+                    type="line"
+                    options='{ "hAxis": { "textPosition" : "none" }, "legend": { "position": "none" } }'
+                    cols='[{ "label": "dateTime", "type": "string" }, { "label": "value", "type": "number" }]'
+                    rows="[[sensorData]]">
+            </google-chart>
+            <!--</template>-->
+          </paper-header-panel>
         </section>
 
         <!-- conditions section -->
-        <section id="conditionsPage" data-route="conditions">
-          <iron-ajax auto
-                     url$="[[config.invokeUrl]]/snucse-iot-soiltracker-get-user-condition"
+        <section id="conditions" class="page" data-route="conditions">
+          <iron-ajax url$="[[config.invokeUrl]]/snucse-iot-soiltracker-get-user-condition"
                      body='{ "user_name": "amoretspero" }'
                      method="POST"
                      content-type="application/json"
@@ -352,7 +386,7 @@
               <paper-icon-button icon="menu"></paper-icon-button>
               <div class="title">Condition list</div>
             </paper-toolbar>
-            <paper-listbox class="flex" on-iron-select="selectCondition">
+            <paper-listbox class="flex" on-iron-select="conditionSelected">
               <template is="dom-repeat" items="[[conditionNames]]">
                 <paper-item>[[item]]</paper-item>
               </template>
@@ -362,7 +396,7 @@
         </section>
 
         <!-- condition setting section -->
-        <section id="setConditionPage" data-route="set-condition">
+        <section id="set-condition" class="page" data-route="set-condition">
           <paper-header-panel>
             <paper-toolbar>
               <paper-icon-button icon="arrow-back" href="/conditions"></paper-icon-button>
@@ -434,51 +468,54 @@
                   </table>
                 </paper-material>
               </div>
+            </template>
           </paper-header-panel>
-</template>
-<iron-ajax id="saveCondition"
-           url$="[[config.invokeUrl]]/snucse-iot-soiltracker-set-monitoring-condition"
-           method="POST"
-           content-type="application/json"
-           handle-as="json"
-           handle-response="handleAjaxResponse">
-</iron-ajax>
-</section>
+        </section>
 
-<!-- option setting section -->
-<section id="options" data-route="options">
-</section>
+        <!-- option setting section -->
+        <section id="options" data-route="options">
+          <paper-header-panel>
+            <paper-toolbar>
+              <div class="title">Options</div>
+            </paper-toolbar>
+            <div class="content">
+              <paper-input>
+                <div prefix>Select Condition</div>
+              </paper-input>
+            </div>
+          </paper-header-panel>
+          <
+        </section>
 
-</iron-pages>
-</div>
-</paper-drawer-panel>
+      </iron-pages>
+    </div>
+  </paper-drawer-panel>
 
-<paper-toast id="toast">
-  <span class="toast-hide-button" role="button" tabindex="0" onclick="app.$.toast.hide()">Ok</span>
-</paper-toast>
+  <paper-toast id="toast">
+    <span class="toast-hide-button" role="button" tabindex="0" onclick="app.$.toast.hide()">Ok</span>
+  </paper-toast>
 
-<iron-ajax id="devices-ajax" auto handle-as="json" on-response="handleDevices"></iron-ajax>
+  <!-- Uncomment next block to enable Service Worker support (1/2) -->
+  <!--
+  <paper-toast id="caching-complete"
+               duration="6000"
+               text="Caching complete! This app will work offline.">
+  </paper-toast>
 
-<!-- Uncomment next block to enable Service Worker support (1/2) -->
-<!--
-<paper-toast id="caching-complete"
-             duration="6000"
-             text="Caching complete! This app will work offline.">
-</paper-toast>
-
-<platinum-sw-register auto-register
-                      clients-claim
-                      skip-waiting
-                      on-service-worker-installed="displayInstalledToast">
-  <platinum-sw-cache default-cache-strategy="fastest"
-                     cache-config-file="cache-config.json">
-  </platinum-sw-cache>
-</platinum-sw-register>
--->
+  <platinum-sw-register auto-register
+                        clients-claim
+                        skip-waiting
+                        on-service-worker-installed="displayInstalledToast">
+    <platinum-sw-cache default-cache-strategy="fastest"
+                       cache-config-file="cache-config.json">
+    </platinum-sw-cache>
+  </platinum-sw-register>
+  -->
 
 </template>
 
 <!-- build:js scripts/app.js -->
+<script src="bower_components/moment/moment.js"></script>
 <script src="scripts/app.js"></script>
 <!-- endbuild-->
 </body>

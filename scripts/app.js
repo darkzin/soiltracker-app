@@ -10,14 +10,54 @@
 (function (document) {
     'use strict';
 
-    window.addEventListener('WebComponentsReady', function() {
-    });
     // Grab a reference to our auto-binding template
     // and give it some initial binding values
     // Learn more about auto-binding templates at http://goo.gl/Dx1u2g
     var app = document.querySelector('#app');
 
+    // Listen for template bound event to know when bindings
+    // have resolved and content has been stamped to the page
+    app.addEventListener('dom-change', function () {
+        var pageSelector = document.querySelector("iron-pages");
+        pageSelector.addEventListener('iron-select', function (e) {
+            var page = e.detail.item;
+            var ajaxElements = page.querySelectorAll("iron-ajax");
+            var length = ajaxElements.length;
+
+            for (var i = 0; i < length; i++) {
+                var element = ajaxElements[i];
+                // need this process because compound binding bug T.T
+                if (!!element.body && !!element.body.match && element.body.match(/\{.*\}/) == null) {
+                    element.body = "{" + element.body;
+                }
+                ;
+                element.generateRequest();
+            }
+            ;
+        });
+    });
+
     app.properties = {
+        config: {
+            type: Object,
+            value: function () {
+                return {
+                    userName: "amoretspero",
+                    invokeUrl: "https://acqc5u2aol.execute-api.us-west-2.amazonaws.com/prod/",
+                    deviceId: "snucse2015-iot",
+                }
+            },
+        },
+        device: {
+            type: Object,
+            value: function () {
+                return {};
+            },
+        },
+        chartPeriod: {
+            type: String,
+            value: "1d",
+        },
         conditions: {
             type: Array,
             value: function () {
@@ -31,32 +71,81 @@
                 return [];
             },
         },
+        chartData: {
+            type: Object,
+            value: function (){
+                return {};
+            }
+        },
+        sensorData: {
+            type: Object,
+            computed: "getSensorDataFrom(chartData, sensorName)",
+        },
+        sensorName: String
     };
+
+    app.toInteger = function(number){
+        return parseInt(number);
+    }
 
     app._conditionsChanged = function (newValue, oldValue) {
-        // this observer used for a setter of condition property,
-        // and set conditionNames property.
-        // I don't use computed method for conditionNames because setting order of conditions.
-        var conditions;
-
         if (!!newValue.Items) {
-            conditions = newValue.Items;
+            this.conditions = newValue.Items;
         }
-        else {
-            conditions = newValue;
-        }
-
-        this.conditions = conditions;
-        this.conditionNames = this._aggregateConditionNames(conditions);
+        this.conditionNames = this._aggregateConditionName(newValue);
     };
 
-    app._aggregateConditionNames = function (conditions) {
-        return conditions.map(function (item) {
+    app._aggregateConditionName = function () {
+        return app.conditions.map(function (item) {
             return item.condition_name;
         });
     };
 
-    app.selectCondition = function(e){
+    app.sensorChartSelected = function(e){
+        var paperIconButton = e.path["1"];
+        var sensorType = paperIconButton.dataset.sensor;
+        this.sensorName = sensorType;
+        app.route = "chart";
+    };
+
+    app.getSensorDataFrom = function(fetchData, sensorName){
+        return fetchData[sensorName];
+    };
+
+    app.chartPeriodChanged = function (e) {
+        app.set("chartPeriod", e.detail.item.textContent.replace(/(^\s*)|(\s*$)/gi, ""));
+        var ajaxElement = app.$.chartAjax;
+        if (!!ajaxElement.body && ajaxElement.body.match(/\{.*\}/) == null) {
+            ajaxElement.body = "{" + ajaxElement.body;
+        }
+        ;
+        ajaxElement.generateRequest();
+    };
+
+    app.stringifyTime = function (period) {
+
+        var unit = "";
+        var quantity = parseInt(period);
+
+        switch (period[period.length - 1]) {
+            case "h":
+                unit = "hours";
+                break;
+
+            case "d":
+                unit = "days";
+                break;
+
+            case "m":
+                unit = "months";
+                break;
+        }
+        var now = moment();
+        app.set("timeNow", now.format("YYYYMMDDHHmmss"));
+        return now.subtract(unit, quantity).format("YYYYMMDDHHmmss");
+    };
+
+    app.conditionSelected = function (e) {
         // when you click the list item, fill content of setConditionPage, then move to that page.
         var selectedCondition = document.querySelector('#selectedCondition');
         var listbox = e.target;
@@ -66,7 +155,7 @@
 
         // copy data, not reference. because template object holded data-binding.
         // if you copy the reference, you'll loose data-binding.
-        for(var propertyName in this.conditions[index]){
+        for (var propertyName in this.conditions[index]) {
             selectedCondition.set("data." + propertyName, this.conditions[index][propertyName]);
         }
 
@@ -77,25 +166,17 @@
         this.set("route", "set-condition");
     };
 
-    app.saveCondition = function(e){
+    app.saveCondition = function (e) {
         var ajaxElement = document.querySelector("iron-ajax#saveCondition");
         var selectedCondition = document.querySelector("#selectedCondition");
 
         ajaxElement.body = selectedCondition.data;
-        //ajaxElement.body = selectedCondition
         ajaxElement.generateRequest();
+
+        this.set("route", "conditions");
     };
 
-    app.handleAjaxResponse = function(res){
-        console.log(res);
-    };
-
-    app.route = "conditions";
-
-    // App configuration. this is global option.
-    app.set("config", {});
-    app.set("config.invokeUrl", "https://acqc5u2aol.execute-api.us-west-2.amazonaws.com/prod");
-    //app.config.invokeUrl = "https://acqc5u2aol.execute-api.us-west-2.amazonaws.com/prod";
+    app.route = "device";
 
     app.displayInstalledToast = function () {
         // Check to make sure caching is actually enabled—it won't be in the dev environment.
@@ -106,9 +187,6 @@
 
     // Listen for template bound event to know when bindings
     // have resolved and content has been stamped to the page
-    app.addEventListener('dom-change', function () {
-        preparePages();
-    });
 
     // See https://github.com/Polymer/polymer/issues/1381
     window.addEventListener('WebComponentsReady', function () {
@@ -122,12 +200,4 @@
             drawerPanel.closeDrawer();
         }
     };
-
-    // Scroll page to top and expand header
-    app.scrollPageToTop = function () {
-        //app.$.headerPanelMain.scrollToTop(true);
-    };
-
 })(document);
-
-
