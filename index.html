@@ -46,6 +46,11 @@
 
   <!-- For shared styles, shared-styles.html import in elements.html -->
   <style is="custom-style" include="shared-styles">
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
     paper-material {
       height: initial;
     }
@@ -211,17 +216,17 @@
       <paper-menu attr-for-selected="data-route" selected="[[route]]">
         <a data-route="devices" href="/" on-tap="onDataRouteClick">
           <iron-icon icon="settings-remote"></iron-icon>
-          <span>센서 정보</span>
+          <span>Device Information</span>
         </a>
 
         <a data-route="conditions" href="/conditions" on-tap="onDataRouteClick">
           <iron-icon icon="device:dvr"></iron-icon>
-          <span>모니터링 관리</span>
+          <span>Condition Management </span>
         </a>
 
         <a data-route="options" href="/options" on-tap="onDataRouteClick">
           <iron-icon icon="apps"></iron-icon>
-          <span>옵션 설정</span>
+          <span>Options</span>
         </a>
       </paper-menu>
     </paper-scroll-header-panel>
@@ -234,19 +239,21 @@
 
         <!-- device section -->
         <section id="device" class="page" data-route="device">
-          <iron-ajax url$="[[config.invokeUrl]]/snucse-iot-soiltracker-get-device-condition"
+          <iron-ajax data-model="device"
+                     data-field="limit"
+                     url$="[[config.invokeUrl]]/snucse-iot-soiltracker-get-device-condition"
                      method="POST"
                      body='{"user_name": "amoretspero", "device_id": "snucse2015-iot"}'
                      content-type="application/json"
-                     handle-as="json"
-                     last-response="{{condition}}">
+                     handle-as="json">
           </iron-ajax>
-          <iron-ajax url$="[[config.invokeUrl]]/snucse-iot-soiltracker-fetch-latest-data"
+          <iron-ajax data-model="device"
+                     data-field="current"
+                     url$="[[config.invokeUrl]]/snucse-iot-soiltracker-fetch-latest-data"
                      method="POST"
                      body='{"device_id": "snucse2015-iot"}'
                      content-type="application/json"
-                     handle-as="json"
-                     last-response="{{device}}">
+                     handle-as="json">
           </iron-ajax>
           <paper-header-panel>
 
@@ -276,12 +283,13 @@
                       <iron-icon class="avatar orange" src="images/temperature.svg"></iron-icon>
                       <span class="sensor-name">Temperature</span>
                     </td>
-                    <td class="cur">[[toInteger(device.temperature)]]</td>
-                    <td class="min">[[condition.temperature_min]]</td>
-                    <td class="max">[[condition.temperature_max]]</td>
+                    <td class="cur">[[toFixed(models.device.current.temperature, 2)]]</td>
+                    <td class="min">[[models.device.limit.temperature_min]]</td>
+                    <td class="max">[[models.device.limit.temperature_max]]</td>
                     <td class="chart">
-                      <paper-icon-button icon="assessment" data-sensor="temperature"
-                                         on-click="sensorChartSelected"></paper-icon-button>
+                      <a href="/temperature/chart">
+                        <paper-icon-button icon="assessment" data-sensor="temperature"></paper-icon-button>
+                      </a>
                     </td>
                   </tr>
                   <tr>
@@ -289,12 +297,13 @@
                       <iron-icon class="avatar blue" src="images/moisture.svg"></iron-icon>
                       <span class="device-name">Moisture</span>
                     </td>
-                    <td class="cur">[[toInteger(device.moisture)]]</td>
-                    <td class="min">[[condition.moisture_min]]</td>
-                    <td class="max">[[condition.moisture_max]]</td>
+                    <td class="cur">[[models.device.current.moisture]]</td>
+                    <td class="min">[[models.device.limit.moisture_min]]</td>
+                    <td class="max">[[models.device.limit.moisture_max]]</td>
                     <td class="chart">
-                      <paper-icon-button icon="assessment" data-sensor="moisture"
-                                         on-click="sensorChartSelected"></paper-icon-button>
+                      <a href="/moisture/chart">
+                        <paper-icon-button icon="assessment" data-sensor="moisture"></paper-icon-button>
+                      </a>
                     </td>
                   </tr>
                   <tr>
@@ -302,12 +311,13 @@
                       <iron-icon class="avatar red" src="images/uv.svg"></iron-icon>
                       <span class="device-name">UV</span>
                     </td>
-                    <td class="cur">1.2</td>
-                    <td class="min">[[condition.uv_min]]</td>
-                    <td class="max">[[condition.uv_max]]</td>
+                    <td class="cur">[[toFixed(models.device.current.uv, 2)]]</td>
+                    <td class="min">[[models.device.limit.uv_min]]</td>
+                    <td class="max">[[models.device.limit.uv_max]]</td>
                     <td class="chart">
-                      <paper-icon-button icon="assessment" data-sensor="uv"
-                                         on-click="sensorChartSelected"></paper-icon-button>
+                      <a href="/uv/chart">
+                        <paper-icon-button icon="assessment" data-sensor="uv"></paper-icon-button>
+                      </a>
                     </td>
                   </tr>
                   <tr>
@@ -315,12 +325,13 @@
                       <iron-icon class="avatar green" src="images/light.svg"></iron-icon>
                       <span class="device-name">Light</span>
                     </td>
-                    <td class="cur">[[toInteger(device.light)]]</td>
-                    <td class="min">[[condition.light_min]]</td>
-                    <td class="max">[[condition.light_max]]</td>
+                    <td class="cur">[[toFixed(models.device.current.light, 2)]]</td>
+                    <td class="min">[[models.device.limit.light_min]]</td>
+                    <td class="max">[[models.device.limit.light_max]]</td>
                     <td class="chart">
-                      <paper-icon-button icon="assessment" data-sensor="light"
-                                         on-tap="sensorChartSelected"></paper-icon-button>
+                      <a href="/light/chart">
+                        <paper-icon-button icon="assessment" data-sensor="light"></paper-icon-button>
+                      </a>
                     </td>
                   </tr>
                   </tbody>
@@ -332,23 +343,26 @@
 
         <!-- chart section -->
         <section id="chart" class="page" data-route="chart">
-          <iron-ajax id="chartAjax"
+          <iron-ajax data-model="chart"
+                     id="chartAjax"
                      url$="[[config.invokeUrl]]snucse-iot-soiltracker-fetch-data"
-                     body$='{ "device_id": "snucse2015-iot", "time_start": [[stringifyTime(chartPeriod)]], "time_end": [[timeNow]], "interval": "[[chartPeriod]]" }'
+                     body$='{ "device_id": "snucse2015-iot", "time_start": [[models.chart.timeAgo]], "time_end": [[models.chart.timeNow]], "interval": "[[models.chart.period]]" }'
                      method="POST"
                      content-type="application/json"
-                     handle-as="json"
-                     last-response="{{chartData}}">
+                     handle-as="json">
           </iron-ajax>
           <paper-header-panel>
             <paper-toolbar>
-              <paper-icon-button icon="arrow-back" href="/device"></paper-icon-button>
+              <a href="/device">
+                <paper-icon-button icon="arrow-back"></paper-icon-button>
+              </a>
+
               <div class="title">Chart Of Sensor</div>
             </paper-toolbar>
             <paper-material>
               <h3> Select period of time</h3>
               <paper-dropdown-menu>
-                <paper-menu class="dropdown-content" on-iron-select="chartPeriodChanged" selected="3">
+                <paper-menu class="dropdown-content" selected="3">
                   <paper-item>3h</paper-item>
                   <paper-item>6h</paper-item>
                   <paper-item>12h</paper-item>
@@ -361,114 +375,119 @@
                 </paper-menu>
               </paper-dropdown-menu>
             </paper-material>
-            <!--<template is="dom-bind" id="sensorData">-->
             <google-chart
                     type="line"
                     options='{ "hAxis": { "textPosition" : "none" }, "legend": { "position": "none" } }'
                     cols='[{ "label": "dateTime", "type": "string" }, { "label": "value", "type": "number" }]'
-                    rows="[[sensorData]]">
+                    rows="[[models.chart.sensorData]]">
             </google-chart>
-            <!--</template>-->
           </paper-header-panel>
         </section>
 
         <!-- conditions section -->
         <section id="conditions" class="page" data-route="conditions">
-          <iron-ajax url$="[[config.invokeUrl]]/snucse-iot-soiltracker-get-user-condition"
+          <iron-ajax data-model="conditions"
+                     url$="[[config.invokeUrl]]snucse-iot-soiltracker-get-user-condition"
                      body='{ "user_name": "amoretspero" }'
                      method="POST"
                      content-type="application/json"
-                     handle-as="json"
-                     last-response="{{conditions}}">
+                     handle-as="json">
           </iron-ajax>
           <paper-header-panel mode="standard">
             <paper-toolbar>
               <paper-icon-button icon="menu"></paper-icon-button>
-              <div class="title">Condition list</div>
+              <div class="title">Condition Management</div>
             </paper-toolbar>
-            <paper-listbox class="flex" on-iron-select="conditionSelected">
-              <template is="dom-repeat" items="[[conditionNames]]">
-                <paper-item>[[item]]</paper-item>
+            <paper-listbox class="flex">
+              <template is="dom-repeat" items="[[models.conditions.conditionNames]]">
+                <a href$="/conditions/[[index]]">
+                  <paper-item>[[item]]</paper-item>
+                </a>
               </template>
             </paper-listbox>
-            <paper-fab icon="add"></paper-fab>
+            <a href="/conditions/new">
+              <paper-fab icon="add"></paper-fab>
+            </a>
           </paper-header-panel>
         </section>
 
         <!-- condition setting section -->
         <section id="set-condition" class="page" data-route="set-condition">
+          <iron-ajax url$="[[config.invokeUrl]]snucse-iot-soiltracker-set-monitoring-condition"
+                     method="POST"
+                     content-type="application/json"
+                     handle-as="json">
+          </iron-ajax>
           <paper-header-panel>
             <paper-toolbar>
               <paper-icon-button icon="arrow-back" href="/conditions"></paper-icon-button>
               <div class="title flex">Set Condition</div>
-              <paper-icon-button icon="check" on-click="saveCondition"></paper-icon-button>
+              <paper-icon-button id="save" icon="check"></paper-icon-button>
             </paper-toolbar>
-            <template is="dom-bind" id="selectedCondition">
-              <div class="content-fit">
-                <paper-material>
-                  <paper-input label="Condition Name" value="{{data.condition_name}}"></paper-input>
-                  <table class="sensor-table">
-                    <thead>
-                    <tr>
-                      <th class="name">Sensor Name</th>
-                      <th class="min">Min.</th>
-                      <th class="max">Max.</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr>
-                      <td class="name">
-                        <iron-icon class="avatar orange" src="images/temperature.svg"></iron-icon>
-                        <span class="sensor-name">Temperature</span>
-                      </td>
-                      <td class="min">
-                        <paper-input value="{{data.temperature_min}}"></paper-input>
-                      </td>
-                      <td class="max">
-                        <paper-input value="{{data.temperature_max}}"></paper-input>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td class="name">
-                        <iron-icon class="avatar blue" src="images/moisture.svg"></iron-icon>
-                        <span class="sensor-name">Moisture</span>
-                      </td>
-                      <td class="min">
-                        <paper-input value="{{data.moisture_min}}"></paper-input>
-                      </td>
-                      <td class="max">
-                        <paper-input value="{{data.moisture_max}}"></paper-input>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td class="name">
-                        <iron-icon class="avatar red" src="images/uv.svg"></iron-icon>
-                        <span class="sensor-name">UV</span>
-                      </td>
-                      <td class="min">
-                        <paper-input value="{{data.uv_min}}"></paper-input>
-                      </td>
-                      <td class="max">
-                        <paper-input value="{{data.uv_max}}"></paper-input>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td class="name">
-                        <iron-icon class="avatar green" src="images/light.svg"></iron-icon>
-                        <span class="sensor-name">Light</span>
-                      </td>
-                      <td class="min">
-                        <paper-input value="{{data.light_min}}"></paper-input>
-                      </td>
-                      <td class="max">
-                        <paper-input value="{{data.light_max}}"></paper-input>
-                      </td>
-                    </tr>
-                    </tbody>
-                  </table>
-                </paper-material>
-              </div>
-            </template>
+            <div class="content-fit">
+              <paper-material>
+                <paper-input label="Condition Name" value="{{models.condition.condition_name}}"></paper-input>
+                <table class="sensor-table">
+                  <thead>
+                  <tr>
+                    <th class="name">Sensor Name</th>
+                    <th class="min">Min.</th>
+                    <th class="max">Max.</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  <tr>
+                    <td class="name">
+                      <iron-icon class="avatar orange" src="images/temperature.svg"></iron-icon>
+                      <span class="sensor-name">Temperature</span>
+                    </td>
+                    <td class="min">
+                      <paper-input value="{{models.condition.temperature_min}}"></paper-input>
+                    </td>
+                    <td class="max">
+                      <paper-input value="{{models.condition.temperature_max}}"></paper-input>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="name">
+                      <iron-icon class="avatar blue" src="images/moisture.svg"></iron-icon>
+                      <span class="sensor-name">Moisture</span>
+                    </td>
+                    <td class="min">
+                      <paper-input value="{{models.condition.moisture_min}}"></paper-input>
+                    </td>
+                    <td class="max">
+                      <paper-input value="{{models.condition.moisture_max}}"></paper-input>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="name">
+                      <iron-icon class="avatar red" src="images/uv.svg"></iron-icon>
+                      <span class="sensor-name">UV</span>
+                    </td>
+                    <td class="min">
+                      <paper-input value="{{models.condition.uv_min}}"></paper-input>
+                    </td>
+                    <td class="max">
+                      <paper-input value="{{models.condition.uv_max}}"></paper-input>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="name">
+                      <iron-icon class="avatar green" src="images/light.svg"></iron-icon>
+                      <span class="sensor-name">Light</span>
+                    </td>
+                    <td class="min">
+                      <paper-input value="{{models.condition.light_min}}"></paper-input>
+                    </td>
+                    <td class="max">
+                      <paper-input value="{{models.condition.light_max}}"></paper-input>
+                    </td>
+                  </tr>
+                  </tbody>
+                </table>
+              </paper-material>
+            </div>
           </paper-header-panel>
         </section>
 

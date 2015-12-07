@@ -1,41 +1,6 @@
-/*
- Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
- This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
- The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
- The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
- Code distributed by Google as part of the polymer project is also
- subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
- */
-
+// variables and functions used for app globally.
 (function (document) {
-    'use strict';
-
-    // Grab a reference to our auto-binding template
-    // and give it some initial binding values
-    // Learn more about auto-binding templates at http://goo.gl/Dx1u2g
     var app = document.querySelector('#app');
-
-    // Listen for template bound event to know when bindings
-    // have resolved and content has been stamped to the page
-    app.addEventListener('dom-change', function () {
-        var pageSelector = document.querySelector("iron-pages");
-        pageSelector.addEventListener('iron-select', function (e) {
-            var page = e.detail.item;
-            var ajaxElements = page.querySelectorAll("iron-ajax");
-            var length = ajaxElements.length;
-
-            for (var i = 0; i < length; i++) {
-                var element = ajaxElements[i];
-                // need this process because compound binding bug T.T
-                if (!!element.body && !!element.body.match && element.body.match(/\{.*\}/) == null) {
-                    element.body = "{" + element.body;
-                }
-                ;
-                element.generateRequest();
-            }
-            ;
-        });
-    });
 
     app.properties = {
         config: {
@@ -48,67 +13,254 @@
                 }
             },
         },
-        device: {
+        models: {
             type: Object,
             value: function () {
-                return {};
+                return {
+                    device: {},
+                    conditions: {},
+                    condition: {},
+                    chart: {},
+                    options: {},
+                };
             },
         },
-        chartPeriod: {
-            type: String,
-            value: "1d",
-        },
-        conditions: {
-            type: Array,
-            value: function () {
-                return [];
-            },
-            observer: "_conditionsChanged"
-        },
-        conditionNames: {
-            type: Array,
-            value: function () {
-                return [];
-            },
-        },
-        chartData: {
-            type: Object,
-            value: function (){
-                return {};
+    };
+
+    app.toFixed = function (number, digit) {
+        return number.toFixed(digit);
+    };
+
+})(document);
+
+(function (document) {
+    'use strict';
+
+    var app = document.querySelector('#app');
+    app.addEventListener("dom-change", function () {
+        var chartPage = document.querySelector("section#chart");
+        var dropdown = chartPage.querySelector("paper-menu.dropdown-content");
+
+        dropdown.addEventListener("iron-select", function (e) {
+            app.set("models.chart.period", e.detail.item.textContent.replace(/(^\s*)|(\s*$)/gi, ""));
+            app.models.chart.updateDatetimeWithPeriod();
+
+            var ajaxElement = app.$.chartAjax;
+            if (!!ajaxElement.body && ajaxElement.body.match(/\{.*\}/) == null) {
+                ajaxElement.body = "{" + ajaxElement.body;
             }
-        },
-        sensorData: {
-            type: Object,
-            computed: "getSensorDataFrom(chartData, sensorName)",
-        },
-        sensorName: String
-    };
-
-    app.toInteger = function(number){
-        return parseInt(number);
-    }
-
-    app._conditionsChanged = function (newValue, oldValue) {
-        if (!!newValue.Items) {
-            this.conditions = newValue.Items;
-        }
-        this.conditionNames = this._aggregateConditionName(newValue);
-    };
-
-    app._aggregateConditionName = function () {
-        return app.conditions.map(function (item) {
-            return item.condition_name;
+            ajaxElement.generateRequest();
         });
-    };
 
-    app.sensorChartSelected = function(e){
+        var setConditionPage = document.querySelector("section#set-condition");
+        var saveButton = setConditionPage.querySelector("paper-icon-button#save");
+        var ajax = setConditionPage.querySelector("iron-ajax");
+
+        saveButton.addEventListener("click", function (e) {
+            var condition = app.models.condition;
+            condition.save(ajax);
+        });
+    });
+
+    // Listen for template bound event to know when bindings
+    // have resolved and content has been stamped to the page
+    app.addEventListener('dom-change', function () {
+        var device = app.models.device;
+
+        var chart = app.models.chart;
+        chart.period = "1d";
+        chart.sensorName = "light";
+
+        chart.updateDatetimeWithPeriod = function () {
+            var unit = this._parsePeriodUnit();
+            var quantity = parseInt(this.period);
+            var now = moment();
+
+            app.set("models.chart.timeNow", now.format("YYYYMMDDHHmmss"));
+            app.set("models.chart.timeAgo", now.subtract(unit, quantity).format("YYYYMMDDHHmmss"));
+        };
+
+        chart.ajaxComplete = function () {
+            app.set("models.chart.sensorData", chart._getSensorData());
+        };
+
+        chart._parsePeriodUnit = function () {
+            var unit = "";
+
+            switch (this.period[this.period.length - 1]) {
+                case "h":
+                    unit = "hours";
+                    break;
+
+                case "d":
+                    unit = "days";
+                    break;
+
+                case "m":
+                    unit = "months";
+                    break;
+            }
+            return unit;
+        };
+
+        chart._getSensorData = function () {
+            if (!!this.data) {
+                return this.data[this.sensorName];
+            }
+            else {
+                return null;
+            }
+        };
+
+        var conditions = app.models.conditions;
+
+        conditions.getConditionNames = function () {
+            var length = this.Items.length;
+            var conditionNames = [];
+
+            for (var i = 0; i < length; i++) {
+                conditionNames.push(this.Items[i].condition_name);
+            }
+
+            return conditionNames;
+        }
+
+        conditions.ajaxComplete = function () {
+            app.set("models.conditions.conditionNames", this.getConditionNames());
+        };
+
+        conditions.conditionSelected = function (e) {
+            var condition = app.models.condition;
+            // when you click the list item, fill content of setConditionPage, then move to that page.
+            //var listbox = e.target;
+            //var item = e.detail.item;
+            //var index = listbox.indexOf(item);
+            var index = app.params.id;
+
+            // copy data, not reference. because template object holded data-binding.
+            // if you copy the reference, you'll loose data-binding.
+            for (var propertyName in conditions.Items[index]) {
+                app.set("models.condition." + propertyName, conditions.Items[index][propertyName]);
+            }
+
+            // set old-condition-name same as condition-name.
+            // this is used to check whether this data is new or not.
+            condition.old_condition_name = condition.condition_name;
+
+            //app.set("route", "set-condition");
+        }
+
+        var condition = app.models.condition;
+        condition.save = function (ajaxElement) {
+            condition.user_name = "amoretspero";
+            ajaxElement.body = condition._toJSON();
+            ajaxElement.addEventListener("response", function(e){
+                page.redirect("/conditions");
+            });
+            ajaxElement.generateRequest();
+        };
+
+        condition._toJSON = function () {
+            var json = {};
+            for (var property in this) {
+                if (!!this.hasOwnProperty(property) && typeof(condition[property]) != "function") {
+                    json[property] = this[property];
+                }
+            }
+            return json;
+        }
+
+        var pageSelector = document.querySelector("iron-pages");
+
+        pageSelector.addEventListener('iron-select', function (e) {
+            if (e.srcElement != this) {
+                return;
+            }
+            var page = this.selectedItem;
+
+            switch (page.id) {
+                case "device":
+                    break;
+                case "chart":
+                    chart.updateDatetimeWithPeriod();
+                    break;
+                case "conditions":
+                    break;
+                case "set-condition":
+                    conditions.conditionSelected();
+                    break;
+            }
+
+            var ajaxElements = page.querySelectorAll("iron-ajax");
+            var length = ajaxElements.length;
+
+            for (var i = 0; i < length; i++) {
+                var element = ajaxElements[i];
+                // need this process because compound binding bug T.T
+                if (!!element.body && !!element.body.match && element.body.match(/\{.*\}/) == null) {
+                    element.body = "{" + element.body;
+                }
+                element.generateRequest();
+            }
+        });
+    });
+
+    app.addEventListener("dom-change", function () {
+        var ajaxElements = document.querySelectorAll("iron-ajax[data-model]");
+        var length = ajaxElements.length;
+
+        for (var i = 0; i < length; i++) {
+            var ajax = ajaxElements[i];
+
+            ajax.addEventListener("response", function (e) {
+                var modelName = this.dataset.model;
+                var fieldName = this.dataset.field;
+                var path = "models." + modelName;
+
+                if (app.models[modelName] == null) {
+                    app.models[modelName] = {};
+                }
+
+                if (!!fieldName) {
+                    if (!!!app.models[modelName][fieldName]) {
+                        app.models[modelName][fieldName] = {};
+                    }
+                    path += "." + fieldName;
+                }
+
+                var response = e.detail.response;
+
+                if (!!!response) {
+                    return;
+                }
+
+                for (var property in response) {
+                    if (response.hasOwnProperty(property)) {
+                        app.set(path + "." + property, response[property]);
+                    }
+                }
+
+                // call after hook function.
+                if (!!app.models[modelName].ajaxComplete) {
+                    app.models[modelName].ajaxComplete();
+                }
+
+                if (!!fieldName && !!app.models[modelName][fieldName].ajaxComplete) {
+                    app.models[modelName][fieldName].ajaxComplete();
+                }
+
+            });
+        }
+    });
+
+    app.sensorChartSelected = function (e) {
         var paperIconButton = e.path["1"];
         var sensorType = paperIconButton.dataset.sensor;
         this.sensorName = sensorType;
         app.route = "chart";
     };
 
-    app.getSensorDataFrom = function(fetchData, sensorName){
+    app.getSensorDataFrom = function (fetchData, sensorName) {
         return fetchData[sensorName];
     };
 
@@ -122,49 +274,26 @@
         ajaxElement.generateRequest();
     };
 
-    app.stringifyTime = function (period) {
-
-        var unit = "";
-        var quantity = parseInt(period);
-
-        switch (period[period.length - 1]) {
-            case "h":
-                unit = "hours";
-                break;
-
-            case "d":
-                unit = "days";
-                break;
-
-            case "m":
-                unit = "months";
-                break;
-        }
-        var now = moment();
-        app.set("timeNow", now.format("YYYYMMDDHHmmss"));
-        return now.subtract(unit, quantity).format("YYYYMMDDHHmmss");
-    };
-
-    app.conditionSelected = function (e) {
-        // when you click the list item, fill content of setConditionPage, then move to that page.
-        var selectedCondition = document.querySelector('#selectedCondition');
-        var listbox = e.target;
-        var item = e.detail.item;
-        var index = listbox.indexOf(item);
-        selectedCondition.data = {};
-
-        // copy data, not reference. because template object holded data-binding.
-        // if you copy the reference, you'll loose data-binding.
-        for (var propertyName in this.conditions[index]) {
-            selectedCondition.set("data." + propertyName, this.conditions[index][propertyName]);
-        }
-
-        // set old-condition-name same as condition-name.
-        // this is used to check whether this data is new or not.
-        selectedCondition.old_condition_name = selectedCondition.condition_name;
-
-        this.set("route", "set-condition");
-    };
+    //app.conditionSelected = function (e) {
+    //    // when you click the list item, fill content of setConditionPage, then move to that page.
+    //    var selectedCondition = document.querySelector('#selectedCondition');
+    //    var listbox = e.target;
+    //    var item = e.detail.item;
+    //    var index = listbox.indexOf(item);
+    //    selectedCondition.data = {};
+    //
+    //    // copy data, not reference. because template object holded data-binding.
+    //    // if you copy the reference, you'll loose data-binding.
+    //    for (var propertyName in this.conditions[index]) {
+    //        selectedCondition.set("data." + propertyName, this.conditions[index][propertyName]);
+    //    }
+    //
+    //    // set old-condition-name same as condition-name.
+    //    // this is used to check whether this data is new or not.
+    //    selectedCondition.old_condition_name = selectedCondition.condition_name;
+    //
+    //    this.set("route", "set-condition");
+    //};
 
     app.saveCondition = function (e) {
         var ajaxElement = document.querySelector("iron-ajax#saveCondition");
@@ -175,8 +304,6 @@
 
         this.set("route", "conditions");
     };
-
-    app.route = "device";
 
     app.displayInstalledToast = function () {
         // Check to make sure caching is actually enabled—it won't be in the dev environment.
