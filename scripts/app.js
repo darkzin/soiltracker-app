@@ -36,6 +36,7 @@
 (function (document) {
     'use strict';
 
+    // elements on page binding part.
     var app = document.querySelector('#app');
     app.addEventListener("dom-change", function () {
         var chartPage = document.querySelector("section#chart");
@@ -53,18 +54,28 @@
         });
 
         var setConditionPage = document.querySelector("section#set-condition");
+        var selectButton = setConditionPage.querySelector("paper-icon-button#select");
         var saveButton = setConditionPage.querySelector("paper-icon-button#save");
         var ajax = setConditionPage.querySelector("iron-ajax");
 
-        saveButton.addEventListener("click", function (e) {
+        saveButton.addEventListener("tap", function (e) {
             var condition = app.models.condition;
             condition.save(ajax);
         });
+
+        selectButton.addEventListener("tap", function (e) {
+            var condition = app.models.condition;
+            ajax.url = app.config.invokeUrl + "snucse-iot-soiltracker-set-device-condition";
+            ajax.body = { user_name: "amoretspero", device_id: "snucse2015-iot", condition_name: condition.condition_name };
+            ajax.addEventListener("response", function(e) {
+                page.redirect("/device");
+            });
+            ajax.generateRequest();
+        });
     });
 
-    // Listen for template bound event to know when bindings
-    // have resolved and content has been stamped to the page
     app.addEventListener('dom-change', function () {
+        // Model setting part. This must be replaced by Class instance.
         var device = app.models.device;
 
         var chart = app.models.chart;
@@ -170,6 +181,8 @@
             return json;
         }
 
+
+        // Page setting part.
         var pageSelector = document.querySelector("iron-pages");
 
         pageSelector.addEventListener('iron-select', function (e) {
@@ -206,6 +219,7 @@
     });
 
     app.addEventListener("dom-change", function () {
+        // Ajax auto binding part.
         var ajaxElements = document.querySelectorAll("iron-ajax[data-model]");
         var length = ajaxElements.length;
 
@@ -252,58 +266,6 @@
             });
         }
     });
-
-    app.sensorChartSelected = function (e) {
-        var paperIconButton = e.path["1"];
-        var sensorType = paperIconButton.dataset.sensor;
-        this.sensorName = sensorType;
-        app.route = "chart";
-    };
-
-    app.getSensorDataFrom = function (fetchData, sensorName) {
-        return fetchData[sensorName];
-    };
-
-    app.chartPeriodChanged = function (e) {
-        app.set("chartPeriod", e.detail.item.textContent.replace(/(^\s*)|(\s*$)/gi, ""));
-        var ajaxElement = app.$.chartAjax;
-        if (!!ajaxElement.body && ajaxElement.body.match(/\{.*\}/) == null) {
-            ajaxElement.body = "{" + ajaxElement.body;
-        }
-        ;
-        ajaxElement.generateRequest();
-    };
-
-    //app.conditionSelected = function (e) {
-    //    // when you click the list item, fill content of setConditionPage, then move to that page.
-    //    var selectedCondition = document.querySelector('#selectedCondition');
-    //    var listbox = e.target;
-    //    var item = e.detail.item;
-    //    var index = listbox.indexOf(item);
-    //    selectedCondition.data = {};
-    //
-    //    // copy data, not reference. because template object holded data-binding.
-    //    // if you copy the reference, you'll loose data-binding.
-    //    for (var propertyName in this.conditions[index]) {
-    //        selectedCondition.set("data." + propertyName, this.conditions[index][propertyName]);
-    //    }
-    //
-    //    // set old-condition-name same as condition-name.
-    //    // this is used to check whether this data is new or not.
-    //    selectedCondition.old_condition_name = selectedCondition.condition_name;
-    //
-    //    this.set("route", "set-condition");
-    //};
-
-    app.saveCondition = function (e) {
-        var ajaxElement = document.querySelector("iron-ajax#saveCondition");
-        var selectedCondition = document.querySelector("#selectedCondition");
-
-        ajaxElement.body = selectedCondition.data;
-        ajaxElement.generateRequest();
-
-        this.set("route", "conditions");
-    };
 
     app.displayInstalledToast = function () {
         // Check to make sure caching is actually enabled—it won't be in the dev environment.

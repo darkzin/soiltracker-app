@@ -422,7 +422,8 @@
             <paper-toolbar>
               <paper-icon-button icon="arrow-back" href="/conditions"></paper-icon-button>
               <div class="title flex">Set Condition</div>
-              <paper-icon-button id="save" icon="check"></paper-icon-button>
+              <paper-icon-button id="select" icon="check"></paper-icon-button>
+              <paper-icon-button id="save" icon="save"></paper-icon-button>
             </paper-toolbar>
             <div class="content-fit">
               <paper-material>
@@ -498,8 +499,8 @@
               <div class="title">Options</div>
             </paper-toolbar>
             <div class="content">
-              <paper-input>
-                <div prefix>Select Condition</div>
+              <h3>Invoke URL</h3>
+              <paper-input value="{{config.invokeUrl}}">
               </paper-input>
             </div>
           </paper-header-panel>
