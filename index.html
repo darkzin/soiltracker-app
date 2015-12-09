@@ -219,6 +219,11 @@
           <span>Device Information</span>
         </a>
 
+        <a data-route="devices" href="/devices" on-tap="onDataRouteClick">
+          <iron-icon icon="settings-remote"></iron-icon>
+          <span>Device Management</span>
+        </a>
+
         <a data-route="conditions" href="/conditions" on-tap="onDataRouteClick">
           <iron-icon icon="device:dvr"></iron-icon>
           <span>Condition Management </span>
@@ -243,7 +248,7 @@
                      data-field="limit"
                      url$="[[config.invokeUrl]]snucse-iot-soiltracker-get-device-condition"
                      method="POST"
-                     body='{"user_name": "amoretspero", "device_id": "snucse2015-iot"}'
+                     body$='{"user_name": "amoretspero", "device_id": "[[models.device.device_id]]"}'
                      content-type="application/json"
                      handle-as="json">
           </iron-ajax>
@@ -251,7 +256,7 @@
                      data-field="current"
                      url$="[[config.invokeUrl]]/snucse-iot-soiltracker-fetch-latest-data"
                      method="POST"
-                     body='{"device_id": "snucse2015-iot"}'
+                     body$='{"device_id": "[[models.device.device_id]]"}'
                      content-type="application/json"
                      handle-as="json">
           </iron-ajax>
@@ -341,13 +346,63 @@
           </paper-header-panel>
         </section>
 
+        <!-- devices section -->
+        <section id="devices" class="page" data-route="devices">
+          <iron-ajax data-model="devices"
+                     url$="[[config.invokeUrl]]snucse-iot-soiltracker-get-user-devices"
+                     body='{ "user_name": "amoretspero" }'
+                     method="POST"
+                     content-type="application/json"
+                     handle-as="json">
+          </iron-ajax>
+          <paper-header-panel mode="standard">
+            <paper-toolbar>
+              <paper-icon-button icon="menu"></paper-icon-button>
+              <div class="title">Device Management</div>
+            </paper-toolbar>
+            <paper-listbox class="flex">
+              <template is="dom-repeat" items="[[models.devices.deviceNames]]">
+                <paper-item>[[item]]</paper-item>
+              </template>
+            </paper-listbox>
+            <a href="/devices/new">
+              <paper-fab icon="add"></paper-fab>
+            </a>
+          </paper-header-panel>
+        </section>
+
+        <!-- new device section -->
+        <section id="new-device" class="page" data-route="new-device">
+          <iron-ajax class="create-device"
+                     url$="[[config.invokeUrl]]snucse-iot-soiltracker-add-device"
+                     body$='{ "user_name": "amoretspero", "device_id": "[[models.newDevice.deviceName]]" }'
+                     method="POST"
+                     content-type="application/json"
+                     handle-as="json">
+          </iron-ajax>
+          <paper-header-panel>
+            <paper-toolbar>
+              <a href="/devices">
+                <paper-icon-button icon="arrow-back"></paper-icon-button>
+              </a>
+
+              <div class="title flex">Add New Device</div>
+              <paper-icon-button id="save" icon="save"></paper-icon-button>
+            </paper-toolbar>
+            <div class="content-fit">
+              <paper-material>
+                <paper-input label="Device Name" value="{{models.newDevice.deviceName}}"></paper-input>
+              </paper-material>
+            </div>
+          </paper-header-panel>
+        </section>
         <!-- chart section -->
         <section id="chart" class="page" data-route="chart">
           <iron-ajax data-model="chart"
                      data-field="data"
                      id="chartAjax"
                      url$="[[config.invokeUrl]]snucse-iot-soiltracker-fetch-data"
-                     body$='{ "device_id": "snucse2015-iot", "time_start": [[models.chart.timeAgo]], "time_end": [[models.chart.timeNow]], "interval": "[[models.chart.period]]" }'
+                     body$='{ "device_id": "[[models.device.device_id]]", "time_start": [[models.chart.timeAgo]], "time_end": [[models.chart.timeNow]], "interval": "[[models.chart.period]]" }'
                      method="POST"
                      content-type="application/json"
                      handle-as="json">
@@ -422,7 +477,7 @@
           </iron-ajax>
           <iron-ajax class="select-condition"
                      url$="[[config.invokeUrl]]snucse-iot-soiltracker-set-device-condition"
-                     body$='{ "user_name": "amoretspero", "device_id": "snucse2015-iot", "condition_name": "[[models.condition.condition_name]]" }'
+                     body$='{ "user_name": "amoretspero", "device_id": "[[models.device.device_id]]", "condition_name": "[[models.condition.condition_name]]" }'
                      method="POST"
                      content-type="application/json"
                      handle-as="json">

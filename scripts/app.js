@@ -18,6 +18,7 @@
             value: function () {
                 return {
                     device: {},
+                    devices: {},
                     conditions: {},
                     condition: {},
                     chart: {},
@@ -82,6 +83,39 @@
         // Model setting part. This must be replaced by Class instance.
         var device = app.models.device;
 
+        var devices = app.models.devices;
+
+        devices.getDeviceNames = function () {
+            var length = this.Items.length;
+            var deviceNames = [];
+
+            for (var i = 0; i < length; i++) {
+                deviceNames.push(this.Items[i].device_id);
+            }
+
+            return deviceNames;
+        }
+
+        devices.ajaxComplete = function () {
+            app.set("models.devices.deviceNames", this.getDeviceNames());
+        };
+
+        devices.deviceSelected = function (e) {
+            var device = app.models.device;
+            // when you click the list item, fill content of setConditionPage, then move to that page.
+            var listbox = e.target;
+            var item = e.detail.item;
+            var index = listbox.indexOf(item);
+            //var index = app.params.id;
+
+            // copy data, not reference. because template object holded data-binding.
+            // if you copy the reference, you'll loose data-binding.
+            for (var propertyName in devices.Items[index]) {
+                app.set("models.device." + propertyName, devices.Items[index][propertyName]);
+            }
+
+            page.redirect("/device");
+        }
         var chart = app.models.chart;
         chart.period = "1d";
         chart.sensorName = "light";
