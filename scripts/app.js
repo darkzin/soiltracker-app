@@ -66,6 +66,10 @@
             var condition = app.models.condition;
             var ajax = setConditionPage.querySelector("iron-ajax.select-condition");
 
+            if (!!ajax.body && !!ajax.body.match && ajax.body.match(/\{.*\}/) == null) {
+                ajax.body = "{" + ajax.body;
+            }
+
             ajax.addEventListener("response", function(e) {
                 page.redirect("/device");
             });
@@ -204,7 +208,9 @@
                 case "conditions":
                     break;
                 case "set-condition":
-                    conditions.conditionSelected();
+                    if(!!app.params.id) {
+                        conditions.conditionSelected();
+                    }
                     break;
             }
 

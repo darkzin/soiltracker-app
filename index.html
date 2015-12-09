@@ -422,7 +422,7 @@
           </iron-ajax>
           <iron-ajax class="select-condition"
                      url$="[[config.invokeUrl]]snucse-iot-soiltracker-set-device-condition"
-                     body$='{ "user_name": "amoretspero", "device_id": "snucse2015-iot", "condition_name": [[models.condition.condition_name]] }'
+                     body$='{ "user_name": "amoretspero", "device_id": "snucse2015-iot", "condition_name": "[[models.condition.condition_name]]" }'
                      method="POST"
                      content-type="application/json"
                      handle-as="json">

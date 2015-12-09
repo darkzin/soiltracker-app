@@ -31,6 +31,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
 
     page('/conditions/new', function (){
+      var condition = app.models.condition;
+      for( var property in condition ) {
+        if(condition.hasOwnProperty(property) && typeof(condition[property]) != "function"){
+          app.set("models.condition." + property, null);
+        }
+      }
       app.route = 'set-condition';
     });
 
