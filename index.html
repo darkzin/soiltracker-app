@@ -241,7 +241,7 @@
         <section id="device" class="page" data-route="device">
           <iron-ajax data-model="device"
                      data-field="limit"
-                     url$="[[config.invokeUrl]]/snucse-iot-soiltracker-get-device-condition"
+                     url$="[[config.invokeUrl]]snucse-iot-soiltracker-get-device-condition"
                      method="POST"
                      body='{"user_name": "amoretspero", "device_id": "snucse2015-iot"}'
                      content-type="application/json"
@@ -344,6 +344,7 @@
         <!-- chart section -->
         <section id="chart" class="page" data-route="chart">
           <iron-ajax data-model="chart"
+                     data-field="data"
                      id="chartAjax"
                      url$="[[config.invokeUrl]]snucse-iot-soiltracker-fetch-data"
                      body$='{ "device_id": "snucse2015-iot", "time_start": [[models.chart.timeAgo]], "time_end": [[models.chart.timeNow]], "interval": "[[models.chart.period]]" }'
@@ -413,14 +414,25 @@
 
         <!-- condition setting section -->
         <section id="set-condition" class="page" data-route="set-condition">
-          <iron-ajax url$="[[config.invokeUrl]]snucse-iot-soiltracker-set-monitoring-condition"
+          <iron-ajax class="save-condition"
+                     url$="[[config.invokeUrl]]snucse-iot-soiltracker-set-monitoring-condition"
+                     method="POST"
+                     content-type="application/json"
+                     handle-as="json">
+          </iron-ajax>
+          <iron-ajax class="select-condition"
+                     url$="[[config.invokeUrl]]snucse-iot-soiltracker-set-device-condition"
+                     body$='{ "user_name": "amoretspero", "device_id": "snucse2015-iot", "condition_name": [[models.condition.condition_name]] }'
                      method="POST"
                      content-type="application/json"
                      handle-as="json">
           </iron-ajax>
           <paper-header-panel>
             <paper-toolbar>
-              <paper-icon-button icon="arrow-back" href="/conditions"></paper-icon-button>
+              <a href="/conditions">
+                <paper-icon-button icon="arrow-back"></paper-icon-button>
+              </a>
+
               <div class="title flex">Set Condition</div>
               <paper-icon-button id="select" icon="check"></paper-icon-button>
               <paper-icon-button id="save" icon="save"></paper-icon-button>

@@ -56,20 +56,20 @@
         var setConditionPage = document.querySelector("section#set-condition");
         var selectButton = setConditionPage.querySelector("paper-icon-button#select");
         var saveButton = setConditionPage.querySelector("paper-icon-button#save");
-        var ajax = setConditionPage.querySelector("iron-ajax");
 
         saveButton.addEventListener("tap", function (e) {
             var condition = app.models.condition;
-            condition.save(ajax);
+            condition.save(setConditionPage.querySelector("iron-ajax.save-condition"));
         });
 
         selectButton.addEventListener("tap", function (e) {
             var condition = app.models.condition;
-            ajax.url = app.config.invokeUrl + "snucse-iot-soiltracker-set-device-condition";
-            ajax.body = { user_name: "amoretspero", device_id: "snucse2015-iot", condition_name: condition.condition_name };
+            var ajax = setConditionPage.querySelector("iron-ajax.select-condition");
+
             ajax.addEventListener("response", function(e) {
                 page.redirect("/device");
             });
+
             ajax.generateRequest();
         });
     });
@@ -164,7 +164,11 @@
         var condition = app.models.condition;
         condition.save = function (ajaxElement) {
             condition.user_name = "amoretspero";
-            ajaxElement.body = condition._toJSON();
+            var request = condition._toJSON();
+            if(request.condition_name == request.old_condition_name){
+                delete request.old_condition_name;
+            }
+            ajaxElement.body = request;
             ajaxElement.addEventListener("response", function(e){
                 page.redirect("/conditions");
             });
@@ -204,7 +208,7 @@
                     break;
             }
 
-            var ajaxElements = page.querySelectorAll("iron-ajax");
+            var ajaxElements = page.querySelectorAll("iron-ajax[data-model]");
             var length = ajaxElements.length;
 
             for (var i = 0; i < length; i++) {
