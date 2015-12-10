@@ -24,6 +24,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       app.route = 'devices';
     });
 
+    page('/devices/new', function() {
+      app.route = 'new-device';
+    })
+
     page('/:sensor/chart', function (data) {
       app.route = 'chart';
       app.models.chart.sensorName = data.params.sensor;

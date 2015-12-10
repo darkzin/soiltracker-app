@@ -9,7 +9,6 @@
                 return {
                     userName: "amoretspero",
                     invokeUrl: "https://acqc5u2aol.execute-api.us-west-2.amazonaws.com/prod/",
-                    deviceId: "snucse2015-iot",
                 }
             },
         },
@@ -19,10 +18,12 @@
                 return {
                     device: {},
                     devices: {},
+                    newDevice: {},
                     conditions: {},
                     condition: {},
                     chart: {},
-                    options: {},
+                    options: {
+                    },
                 };
             },
         },
@@ -31,7 +32,6 @@
     app.toFixed = function (number, digit) {
         return number.toFixed(digit);
     };
-
 })(document);
 
 (function (document) {
@@ -39,49 +39,11 @@
 
     // elements on page binding part.
     var app = document.querySelector('#app');
-    app.addEventListener("dom-change", function () {
-        var chartPage = document.querySelector("section#chart");
-        var dropdown = chartPage.querySelector("paper-menu.dropdown-content");
-
-        dropdown.addEventListener("iron-select", function (e) {
-            app.set("models.chart.period", e.detail.item.textContent.replace(/(^\s*)|(\s*$)/gi, ""));
-            app.models.chart.updateDatetimeWithPeriod();
-
-            var ajaxElement = app.$.chartAjax;
-            if (!!ajaxElement.body && ajaxElement.body.match(/\{.*\}/) == null) {
-                ajaxElement.body = "{" + ajaxElement.body;
-            }
-            ajaxElement.generateRequest();
-        });
-
-        var setConditionPage = document.querySelector("section#set-condition");
-        var selectButton = setConditionPage.querySelector("paper-icon-button#select");
-        var saveButton = setConditionPage.querySelector("paper-icon-button#save");
-
-        saveButton.addEventListener("tap", function (e) {
-            var condition = app.models.condition;
-            condition.save(setConditionPage.querySelector("iron-ajax.save-condition"));
-        });
-
-        selectButton.addEventListener("tap", function (e) {
-            var condition = app.models.condition;
-            var ajax = setConditionPage.querySelector("iron-ajax.select-condition");
-
-            if (!!ajax.body && !!ajax.body.match && ajax.body.match(/\{.*\}/) == null) {
-                ajax.body = "{" + ajax.body;
-            }
-
-            ajax.addEventListener("response", function(e) {
-                page.redirect("/device");
-            });
-
-            ajax.generateRequest();
-        });
-    });
 
     app.addEventListener('dom-change', function () {
         // Model setting part. This must be replaced by Class instance.
         var device = app.models.device;
+        app.set("models.device.device_id", "snucse2015-iot");
 
         var devices = app.models.devices;
 
@@ -116,6 +78,7 @@
 
             page.redirect("/device");
         }
+
         var chart = app.models.chart;
         chart.period = "1d";
         chart.sensorName = "light";
@@ -200,14 +163,15 @@
         }
 
         var condition = app.models.condition;
+
         condition.save = function (ajaxElement) {
-            condition.user_name = "amoretspero";
+            condition.user_name = config.userName;
             var request = condition._toJSON();
-            if(request.condition_name == request.old_condition_name){
+            if (request.condition_name == request.old_condition_name) {
                 delete request.old_condition_name;
             }
             ajaxElement.body = request;
-            ajaxElement.addEventListener("response", function(e){
+            ajaxElement.addEventListener("response", function (e) {
                 page.redirect("/conditions");
             });
             ajaxElement.generateRequest();
@@ -224,6 +188,79 @@
         }
 
 
+        // page binding part.
+        var devicesPage = document.querySelector("section#devices");
+        var deviceList = devicesPage.querySelector("paper-listbox");
+
+        deviceList.addEventListener("iron-select", devices.deviceSelected);
+
+        var newDevicePage = document.querySelector("section#new-device");
+        var saveButton = newDevicePage.querySelector("paper-icon-button#save");
+
+        saveButton.addEventListener("tap", function(e){
+            var newDevice = app.models.newDevice;
+            var ajaxElement = newDevicePage.querySelector("iron-ajax.create-device");
+
+            ajaxElement.body = { user_name: config.userName, device_id: newDevice.deviceName };
+            ajaxElement.addEventListener("response", function (e) {
+                page.redirect("/devices");
+            });
+
+            ajaxElement.generateRequest();
+        });
+
+        var chartPage = document.querySelector("section#chart");
+        var dropdown = chartPage.querySelector("paper-menu.dropdown-content");
+
+        dropdown.addEventListener("iron-select", function (e) {
+            app.set("models.chart.period", e.detail.item.textContent.replace(/(^\s*)|(\s*$)/gi, ""));
+            app.models.chart.updateDatetimeWithPeriod();
+
+            var ajaxElement = app.$.chartAjax;
+            if (!!ajaxElement.body && ajaxElement.body.match(/\{.*\}/) == null) {
+                ajaxElement.body = "{" + ajaxElement.body;
+            }
+            ajaxElement.generateRequest();
+        });
+
+        var setConditionPage = document.querySelector("section#set-condition");
+        var selectButton = setConditionPage.querySelector("paper-icon-button#select");
+        var saveButton = setConditionPage.querySelector("paper-icon-button#save");
+
+        saveButton.addEventListener("tap", function (e) {
+            var condition = app.models.condition;
+            condition.save(setConditionPage.querySelector("iron-ajax.save-condition"));
+        });
+
+        selectButton.addEventListener("tap", function (e) {
+            var condition = app.models.condition;
+            var ajax = setConditionPage.querySelector("iron-ajax.select-condition");
+
+            if (!!ajax.body && !!ajax.body.match && ajax.body.match(/\{.*\}/) == null) {
+                ajax.body = "{" + ajax.body;
+            }
+
+            ajax.addEventListener("response", function (e) {
+                page.redirect("/device");
+            });
+
+            ajax.generateRequest();
+        });
+
+        var optionsPage = document.querySelector("section#options");
+        var saveButton = optionsPage.querySelector("paper-icon-button#save");
+
+        saveButton.addEventListener("tap", function(e){
+            var newDevice = app.models.newDevice;
+            var ajaxElement = newDevicePage.querySelector("iron-ajax.create-device");
+
+            ajaxElement.body = { user_name: config.userName, device_id: newDevice.deviceName };
+            ajaxElement.addEventListener("response", function (e) {
+                page.redirect("/devices");
+            });
+
+            ajaxElement.generateRequest();
+        });
         // Page setting part.
         var pageSelector = document.querySelector("iron-pages");
 
@@ -242,7 +279,7 @@
                 case "conditions":
                     break;
                 case "set-condition":
-                    if(!!app.params.id) {
+                    if (!!app.params.id) {
                         conditions.conditionSelected();
                     }
                     break;

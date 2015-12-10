@@ -248,13 +248,13 @@
                      data-field="limit"
                      url$="[[config.invokeUrl]]snucse-iot-soiltracker-get-device-condition"
                      method="POST"
-                     body$='{"user_name": "amoretspero", "device_id": "[[models.device.device_id]]"}'
+                     body$='{"user_name": "[[config.userName]]", "device_id": "[[models.device.device_id]]"}'
                      content-type="application/json"
                      handle-as="json">
           </iron-ajax>
           <iron-ajax data-model="device"
                      data-field="current"
-                     url$="[[config.invokeUrl]]/snucse-iot-soiltracker-fetch-latest-data"
+                     url$="[[config.invokeUrl]]snucse-iot-soiltracker-fetch-latest-data"
                      method="POST"
                      body$='{"device_id": "[[models.device.device_id]]"}'
                      content-type="application/json"
@@ -271,7 +271,7 @@
             <!-- content -->
             <div class="content">
               <paper-material>
-                <h1>snucse2015-iot</h1>
+                <h1>[[models.device.device_id]]</h1>
                 <table class="sensor-table">
                   <thead>
                   <tr>
@@ -349,8 +349,8 @@
         <!-- devices section -->
         <section id="devices" class="page" data-route="devices">
           <iron-ajax data-model="devices"
-                     url$="[[config.invokeUrl]]snucse-iot-soiltracker-get-user-devices"
-                     body='{ "user_name": "amoretspero" }'
+                     url$="[[config.invokeUrl]]snucse-iot-soiltracker-get-user-device"
+                     body='{ "user_name": "[[config.userName]]" }'
                      method="POST"
                      content-type="application/json"
                      handle-as="json">
@@ -375,7 +375,7 @@
         <section id="new-device" class="page" data-route="new-device">
           <iron-ajax class="create-device"
                      url$="[[config.invokeUrl]]snucse-iot-soiltracker-add-device"
-                     body$='{ "user_name": "amoretspero", "device_id": "[[models.newDevice.deviceName]]" }'
+                     body$='{ "user_name": "[[config.userName]]", "device_id": "[[models.newDevice.deviceName]]" }'
                      method="POST"
                      content-type="application/json"
                      handle-as="json">
@@ -444,7 +444,7 @@
         <section id="conditions" class="page" data-route="conditions">
           <iron-ajax data-model="conditions"
                      url$="[[config.invokeUrl]]snucse-iot-soiltracker-get-user-condition"
-                     body='{ "user_name": "amoretspero" }'
+                     body$='{ "user_name": "[[config.userName]]" }'
                      method="POST"
                      content-type="application/json"
                      handle-as="json">
@@ -477,7 +477,7 @@
           </iron-ajax>
           <iron-ajax class="select-condition"
                      url$="[[config.invokeUrl]]snucse-iot-soiltracker-set-device-condition"
-                     body$='{ "user_name": "amoretspero", "device_id": "[[models.device.device_id]]", "condition_name": "[[models.condition.condition_name]]" }'
+                     body$='{ "user_name": "[[config.userName]]", "device_id": "[[models.device.device_id]]", "condition_name": "[[models.condition.condition_name]]" }'
                      method="POST"
                      content-type="application/json"
                      handle-as="json">
@@ -561,17 +561,32 @@
 
         <!-- option setting section -->
         <section id="options" data-route="options">
+          <iron-ajax url$="[[config.invokeUrl]]snucse-iot-soiltracker-set-user-option"
+                     body='{ "user_name": "[[config.userName]]", "app_data_update_interval: "[[models.options.updateInterval]]", "run_monitoring": "[[models.options.monitoring]]" }'
+                     method="POST"
+                     content-type="application/json"
+                     handle-as="json">
+          </iron-ajax>
           <paper-header-panel>
             <paper-toolbar>
               <div class="title">Options</div>
+              <paper-icon-button id="save" icon="save"></paper-icon-button>
             </paper-toolbar>
             <div class="content">
               <h3>Invoke URL</h3>
               <paper-input value="{{config.invokeUrl}}">
               </paper-input>
+              <h3>user_name</h3>
+              <paper-input value="{{config.userName}}">
+              </paper-input>
+              <h3>app data update interval</h3>
+              <paper-input value="{{models.options.updateInterval}}">
+              </paper-input>
+              <h3>run monitoring</h3>
+              <paper-toggle-button value="{{models.options.monitoring}}">
+              </paper-toggle-button>
             </div>
           </paper-header-panel>
-          <
         </section>
 
       </iron-pages>
